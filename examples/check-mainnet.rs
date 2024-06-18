@@ -4,7 +4,7 @@ use alloy_chains::Chain;
 use alloy_provider::{Provider, ProviderBuilder};
 use alloy_rpc_types::{BlockId, BlockTransactionsKind};
 use clap::Parser;
-use pevm::RpcStorage;
+use pevm::{RpcStorage, StorageWrapper};
 use reqwest::Url;
 use revm::db::CacheDB;
 use std::error::Error;
@@ -38,7 +38,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     ))?;
     let block = block_maybe.ok_or(Box::<dyn Error>::from("cannot fetch block"))?;
     let spec_id = pevm::get_block_spec(&block.header).unwrap();
-    let rpc_storage = RpcStorage::new(provider, spec_id, BlockId::number(args.block_number - 1));
+    let rpc_storage = StorageWrapper(RpcStorage::new(
+        provider,
+        spec_id,
+        BlockId::number(args.block_number - 1),
+    ));
     let db = CacheDB::new(&rpc_storage);
     common::test_execute_alloy(db.clone(), Chain::mainnet(), block.clone(), true);
 
